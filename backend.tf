@@ -1,8 +1,8 @@
 terraform {
   backend "s3" {
-    bucket         = "my-unique-eks-state-bucket-2026"
+    bucket         = "my-tf-state-bucket-unique-67890"  # Match the name in your screenshot
     key            = "terraform.tfstate"
-    region         = "us-east-1"
-    dynamodb_table = "terraform-lock-table"
+    region         = "ap-south-1"                       # Match the region in your screenshot
+    dynamodb_table = "terraform-lock-table"             # Ensure this exists in Mumbai too
   }
 }

@@ -16,7 +16,8 @@ pipeline {
         stage('Terraform Init') {
             steps {
                 withEnv(["AWS_ACCESS_KEY_ID=${AWS_CRED_USR}", "AWS_SECRET_ACCESS_KEY=${AWS_CRED_PSW}"]) {
-                    sh "${TF_HOME}/terraform init"
+                    // Changed 'sh' to 'bat' and used backslashes for Windows paths
+                    bat "\"${TF_HOME}\\terraform.exe\" init"
                 }
             }
         }
@@ -24,7 +25,7 @@ pipeline {
         stage('Terraform Plan') {
             steps {
                 withEnv(["AWS_ACCESS_KEY_ID=${AWS_CRED_USR}", "AWS_SECRET_ACCESS_KEY=${AWS_CRED_PSW}"]) {
-                    sh "${TF_HOME}/terraform plan -out=tfplan"
+                    bat "\"${TF_HOME}\\terraform.exe\" plan -out=tfplan"
                 }
             }
         }
@@ -32,7 +33,7 @@ pipeline {
         stage('Terraform Apply') {
             steps {
                 withEnv(["AWS_ACCESS_KEY_ID=${AWS_CRED_USR}", "AWS_SECRET_ACCESS_KEY=${AWS_CRED_PSW}"]) {
-                    sh "${TF_HOME}/terraform apply -auto-approve tfplan"
+                    bat "\"${TF_HOME}\\terraform.exe\" apply -auto-approve tfplan"
                 }
             }
         }
@@ -43,7 +44,7 @@ pipeline {
             echo 'Infrastructure provisioned successfully!'
         }
         failure {
-            echo 'Infrastructure provisioning failed. Check logs.'
+            echo 'Infrastructure provisioning failed. Check the logs above.'
         }
     }
 }

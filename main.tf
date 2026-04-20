@@ -1,5 +1,5 @@
 provider "aws" {
-  region = "us-east-1"
+  region = "ap-south-1" # Updated to match your S3 bucket location
 }
 
 # 1. VPC Configuration
@@ -19,7 +19,8 @@ resource "aws_subnet" "public" {
   count                   = 2
   vpc_id                  = aws_vpc.main.id
   cidr_block              = ["10.0.1.0/24", "10.0.2.0/24"][count.index]
-  availability_zone       = ["us-east-1a", "us-east-1b"][count.index]
+  # Updated AZs for Mumbai
+  availability_zone       = ["ap-south-1a", "ap-south-1b"][count.index] 
   map_public_ip_on_launch = true
   tags                    = { Name = "public-${count.index + 1}" }
 }
@@ -29,11 +30,12 @@ resource "aws_subnet" "private" {
   count             = 2
   vpc_id            = aws_vpc.main.id
   cidr_block        = ["10.0.3.0/24", "10.0.4.0/24"][count.index]
-  availability_zone = ["us-east-1a", "us-east-1b"][count.index]
+  # Updated AZs for Mumbai
+  availability_zone = ["ap-south-1a", "ap-south-1b"][count.index] 
   tags              = { Name = "private-${count.index + 1}" }
 }
 
-# 5. EKS Cluster using the official module
+# 5. EKS Cluster
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
   version = "~> 20.0"
@@ -44,11 +46,14 @@ module "eks" {
   vpc_id     = aws_vpc.main.id
   subnet_ids = aws_subnet.private[*].id
 
+  # This allows your current user to access the cluster via the AWS console
+  enable_cluster_creator_admin_permissions = true
+
   eks_managed_node_groups = {
     workers = {
-      min_size       = 2
-      max_size       = 2
-      desired_size   = 2
+      min_size     = 2
+      max_size     = 2
+      desired_size = 2
       instance_types = ["t3.medium"]
     }
   }

@@ -1,13 +1,10 @@
 pipeline {
     agent any
 
-    // This tells Jenkins to automatically put terraform in the command path
-    tools {
-        terraform 'terraform' 
-    }
-
     environment {
-        AWS_CRED = credentials('aws-keys')
+        AWS_ACCESS_KEY_ID     = credentials('aws-keys-id') // Ensure these match your Jenkins Credential IDs
+        AWS_SECRET_ACCESS_KEY = credentials('aws-keys-secret')
+        AWS_DEFAULT_REGION    = 'ap-south-1' // Must match Mumbai
     }
 
     stages {
@@ -18,30 +15,29 @@ pipeline {
         }
 
         stage('Terraform Init') {
-    steps {
-        withEnv(["AWS_ACCESS_KEY_ID=${AWS_CRED_USR}", "AWS_SECRET_ACCESS_KEY=${AWS_CRED_PSW}"]) {
-            bat "terraform init -reconfigure"
-        }
-    }
-}
-
-        stage('Terraform Plan') {
             steps {
-                withEnv(["AWS_ACCESS_KEY_ID=${AWS_CRED_USR}", "AWS_SECRET_ACCESS_KEY=${AWS_CRED_PSW}"]) {
-                    bat "terraform plan -out=tfplan"
-                }
+                // The -reconfigure flag is key since we changed regions
+                bat 'terraform init -reconfigure'
             }
         }
 
-       stage('Terraform Apply') {
-    steps {
-        bat "terraform apply -input=false tfplan"
+        stage('Terraform Plan') {
+            steps {
+                bat 'terraform plan -out=tfplan'
+            }
+        }
+
+        stage('Terraform Apply') {
+            steps {
+                // This will run the actual creation on AWS
+                bat 'terraform apply -input=false tfplan'
+            }
+        }
     }
-}
 
     post {
-        failure {
-            echo 'Infrastructure provisioning failed.'
+        always {
+            cleanWs()
         }
     }
 }

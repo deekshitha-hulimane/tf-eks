@@ -1,12 +1,7 @@
 pipeline {
     agent any
 
-    triggers {
-        pollSCM('H/5 * * * *') // Check GitHub every 5 mins
-    }
-
     environment {
-        // 'aws-keys' must be the ID of your AWS Credentials in Jenkins
         AWS_CRED = credentials('aws-keys')
         TF_HOME  = tool 'terraform'
     }
@@ -44,8 +39,11 @@ pipeline {
     }
 
     post {
-        always {
-            cleanWs()
+        success {
+            echo 'Infrastructure provisioned successfully!'
+        }
+        failure {
+            echo 'Infrastructure provisioning failed. Check logs.'
         }
     }
 }

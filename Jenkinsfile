@@ -2,21 +2,21 @@ pipeline {
     agent any
 
     stages {
-        stage('Initialize') {
+        stage('Terraform Init & Import') {
             steps {
-                // We only need one checkout
-                checkout scm
+                // Checkout is handled automatically by Declarative Pipeline, 
+                // so we don't need an extra 'checkout scm' step here.
                 
-                withCredentials([usernamePassword(credentialsId: 'aws-keys', 
+                withCredentials([usernamePassword(credentialsId:'aws-keys', 
                                  passwordVariable: 'AWS_SECRET_ACCESS_KEY', 
                                  usernameVariable: 'AWS_ACCESS_KEY_ID')]) {
                     
-                    // 1. Re-sync with S3
+                    // Initialize the backend
                     bat 'terraform init -reconfigure'
                     
-                    // 2. Import the existing cluster so Terraform stops trying to 'Create' it
-                    // NOTE: If this stage fails saying "already imported", that's actually fine!
-                    sh "terraform import module.eks.aws_eks_cluster.this[0] my-eks-cluster || exit 0"
+                    // This import command uses Windows 'bat'. 
+                    // The '|| exit 0' ensures if it's already imported, the build continues.
+                    bat 'terraform import module.eks.aws_eks_cluster.this[0] my-eks-cluster || exit 0'
                 }
             }
         }
@@ -26,7 +26,11 @@ pipeline {
                 withCredentials([usernamePassword(credentialsId: 'aws-keys', 
                                  passwordVariable: 'AWS_SECRET_ACCESS_KEY', 
                                  usernameVariable: 'AWS_ACCESS_KEY_ID')]) {
+                    
+                    // Create the plan file
                     bat 'terraform plan -out=tfplan'
+                    
+                    // Execute the plan
                     bat 'terraform apply -input=false tfplan'
                 }
             }

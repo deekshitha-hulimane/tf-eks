@@ -33,14 +33,11 @@ pipeline {
             }
         }
 
-        stage('Terraform Apply') {
-            steps {
-                withEnv(["AWS_ACCESS_KEY_ID=${AWS_CRED_USR}", "AWS_SECRET_ACCESS_KEY=${AWS_CRED_PSW}"]) {
-                    bat "terraform apply -auto-approve tfplan"
-                }
-            }
-        }
+       stage('Terraform Apply') {
+    steps {
+        bat "terraform apply -input=false tfplan"
     }
+}
 
     post {
         failure {
